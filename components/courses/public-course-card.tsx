@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { BookOpen, Clock, DollarSign, GraduationCap } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

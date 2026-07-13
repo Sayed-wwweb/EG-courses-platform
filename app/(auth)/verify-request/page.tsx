@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator} from "@/components/ui/input-otp";
@@ -9,7 +10,7 @@ import { useRouter, useSearchParams } from "next/dist/client/components/navigati
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-export default function VerifyRequest() {
+function VerifyRequestForm() {
     const router = useRouter();
     const [otp, setOtp] = useState("");
     const [emailPending, startTransition] = useTransition()
@@ -87,5 +88,13 @@ export default function VerifyRequest() {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+export default function VerifyRequest() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyRequestForm />
+    </Suspense>
   );
 }

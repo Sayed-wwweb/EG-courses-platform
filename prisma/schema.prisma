@@ -146,13 +146,14 @@ model Course {
 }
 
 model Enrollment {
-  id        String           @id @default(uuid())
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId  String
-  course    Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  status    EnrollmentStatus @default(PENDING)
-  createdAt DateTime         @default(now())
+  id            String           @id @default(uuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status        EnrollmentStatus @default(PENDING)
+  paymobOrderId String?          @unique
+  createdAt     DateTime         @default(now())
 
   @@unique([userId, courseId])
   @@map("enrollment")

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { BookOpen, Clock, DollarSign, GraduationCap, Library } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -86,6 +87,7 @@ export function CourseSidebar({
         <div className="pt-2">
           {isEnrolled ? (
             <div className="flex items-center gap-2">
+              {/* TODO: point this at the real enrolled-course-content route once it exists */}
               <button
                 type="button"
                 className={cn(buttonVariants({ size: "default" }), "flex-1")}
@@ -103,13 +105,12 @@ export function CourseSidebar({
               )}
             </div>
           ) : (
-            <button
-              type="button"
+            <Link
+              href={`/${course.id}`}
               className={cn(buttonVariants({ size: "default" }), "w-full")}
-              disabled
             >
               Buy course — {course.price} EGP
-            </button>
+            </Link>
           )}
         </div>
       </div>

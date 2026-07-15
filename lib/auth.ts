@@ -19,15 +19,16 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       async sendVerificationOTP({ email, otp }) {
-        try {
-          const { data, error } = await resend.emails.send({
-            from: "elsayed platform <onboarding@resend.dev>",
-            to: [email],
-            subject: "elsayed says verify your email",
-            html: `<p>Your OTP code is: <strong>${otp}</strong></p>`,
-          });
-        } catch (error) {
+        const { error } = await resend.emails.send({
+          from: "elsayed platform <onboarding@resend.dev>",
+          to: [email],
+          subject: "elsayed says verify your email",
+          html: `<p>Your OTP code is: <strong>${otp}</strong></p>`,
+        });
+
+        if (error) {
           console.error("Error sending OTP email:", error);
+          throw new Error(`Failed to send OTP email: ${error.message}`);
         }
       },
     }),

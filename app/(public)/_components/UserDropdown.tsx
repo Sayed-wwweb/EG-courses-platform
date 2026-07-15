@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useSignout } from "@/hooks/use-signout"
 import { cn } from "@/lib/utils"
-import { Book, Home, LayoutDashboard, LogOut, User } from "lucide-react"
+import { Book, Home, LayoutDashboard, Library, LogOut, User } from "lucide-react"
 import Link from "next/link"
 
 interface iAppProps {
@@ -69,6 +69,13 @@ export function AvatarDropdown({name, image, square = false}: iAppProps) {
                 <Link href="/courses">
                 <Book className="size-4 mr-2" />
                 <span>Courses</span>
+                </Link>
+            </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+                <Link href="/library">
+                <Library className="size-4 mr-2" />
+                <span>Library</span>
                 </Link>
             </DropdownMenuItem>
 

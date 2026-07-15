@@ -67,6 +67,9 @@ model User {
   // Course likes this user has given
   courseLikes CourseLike[]
 
+  // Courses this user has saved to buy later
+  savedCourses SavedCourse[]
+
   @@unique([email])
   @@map("user")
 }
@@ -120,25 +123,26 @@ model Verification {
 }
 
 model Course {
-  id               String       @id @default(uuid())
+  id               String        @id @default(uuid())
   title            String
   description      String
   fileKey          String?
   price            Int
   duration         Int
-  level            CourseLevel  @default(Beginner)
+  level            CourseLevel   @default(Beginner)
   university       String?
   smallDescription String
-  slug             String       @unique
-  status           CourseStatus @default(Draft)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug             String        @unique
+  status           CourseStatus  @default(Draft)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId           String
   enrollments      Enrollment[]
   videos           Video[]
   files            CourseFile[]
   likes            CourseLike[]
+  savedBy          SavedCourse[]
   trailerVideoId   String?
   trailerDuration  Int?
 
@@ -224,4 +228,17 @@ model CourseLike {
 
   @@unique([userId, courseId])
   @@map("course_like")
+}
+
+// A user saving a course to buy later (distinct from liking)
+model SavedCourse {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@map("saved_course")
 }

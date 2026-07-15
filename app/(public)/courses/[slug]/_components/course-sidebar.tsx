@@ -5,7 +5,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
 import { CourseLikeButton } from "./course-like-button";
+import { SaveCourseButton } from "./save-course-button";
 import { toggleCourseLike } from "../like-actions";
+import { toggleSavedCourse } from "../saved-actions";
 
 interface CourseSidebarProps {
   course: {
@@ -20,6 +22,8 @@ interface CourseSidebarProps {
   isEnrolled: boolean;
   alreadyLikedCourse: boolean;
   showLikeButton: boolean;
+  alreadySavedCourse: boolean;
+  showSaveButton: boolean;
 }
 
 export function CourseSidebar({
@@ -27,6 +31,8 @@ export function CourseSidebar({
   isEnrolled,
   alreadyLikedCourse,
   showLikeButton,
+  alreadySavedCourse,
+  showSaveButton,
 }: CourseSidebarProps) {
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
@@ -105,12 +111,28 @@ export function CourseSidebar({
               )}
             </div>
           ) : (
-            <Link
-              href={`/${course.id}`}
-              className={cn(buttonVariants({ size: "default" }), "w-full")}
-            >
-              Buy course — {course.price} EGP
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/${course.id}`}
+                className={cn(buttonVariants({ size: "default" }), "flex-1")}
+              >
+                Buy course — {course.price} EGP
+              </Link>
+              {showLikeButton && (
+                <CourseLikeButton
+                  courseId={course.id}
+                  initiallyLiked={alreadyLikedCourse}
+                  onToggle={toggleCourseLike}
+                />
+              )}
+              {showSaveButton && (
+                <SaveCourseButton
+                  courseId={course.id}
+                  initiallySaved={alreadySavedCourse}
+                  onToggle={toggleSavedCourse}
+                />
+              )}
+            </div>
           )}
         </div>
       </div>

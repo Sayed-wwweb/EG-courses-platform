@@ -3,13 +3,11 @@
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "../ui/themeToggle"
-import { APP_NAME, APP_LOGO } from "@/lib/constants"
 import { AvatarDropdown } from "@/app/(public)/_components/UserDropdown"
 import { authClient } from "@/lib/auth-client"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Menu } from "lucide-react"
 import { GlobalSearch } from "@/components/search/global-search"
-import Image from "next/image"
 import Link from "next/link"
 import {
     Sheet,
@@ -24,7 +22,8 @@ const navigationItems = [
     { name: 'Home', href: '/' },
     { name: 'Courses', href: '/courses' },
     { name: 'Instructor', href: '/instructor' },
-    { name: 'Profile', href: '/profile' }
+    { name: 'Profile', href: '/profile' },
+    { name: 'Library', href: '/library' }
 ]
 
 export function SiteHeader() {
@@ -35,13 +34,20 @@ export function SiteHeader() {
       <div className="flex w-full items-center gap-2 px-4 lg:px-6">
         <SidebarTrigger />
 
-        <Link href="/" className="flex items-center gap-2">
-          <Image src={APP_LOGO} alt="logo" width={28} height={28} />
-          <h1 className="text-base font-bold">{APP_NAME}</h1>
-        </Link>
+        <nav className="hidden lg:flex lg:items-center lg:gap-6">
+          {navigationItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              {item.name}
+            </Link>
+          ))}
+        </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <GlobalSearch className="hidden md:block w-84" />
+          <GlobalSearch className="hidden lg:block w-84" />
 
           {isPending ? (
             <Skeleton className="size-9 rounded-md" />
@@ -56,35 +62,37 @@ export function SiteHeader() {
 
           <ThemeToggle />
 
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Open menu">
-                <Menu className="size-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-3/4">
-              <SheetHeader>
-                <SheetTitle className="sr-only">Navigation menu</SheetTitle>
-              </SheetHeader>
+          <div className="lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Open menu">
+                  <Menu className="size-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-3/4">
+                <SheetHeader>
+                  <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+                </SheetHeader>
 
-              <div className="px-4 mb-2 md:hidden">
-                <GlobalSearch />
-              </div>
+                <div className="px-4 mb-2">
+                  <GlobalSearch />
+                </div>
 
-              <div className="flex flex-col gap-2 px-4">
-                {navigationItems.map((item) => (
-                  <SheetClose asChild key={item.name}>
-                    <Link
-                      href={item.href}
-                      className="rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                    >
-                      {item.name}
-                    </Link>
-                  </SheetClose>
-                ))}
-              </div>
-            </SheetContent>
-          </Sheet>
+                <div className="flex flex-col gap-2 px-4">
+                  {navigationItems.map((item) => (
+                    <SheetClose asChild key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                      >
+                        {item.name}
+                      </Link>
+                    </SheetClose>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>

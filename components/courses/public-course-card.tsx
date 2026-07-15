@@ -5,7 +5,6 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
-
 interface PublicCourseCardProps {
   course: {
     slug: string;

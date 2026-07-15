@@ -59,6 +59,9 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
       likes: session?.user
         ? { where: { userId: session.user.id }, select: { id: true } }
         : undefined,
+      savedBy: session?.user
+        ? { where: { userId: session.user.id }, select: { id: true } }
+        : undefined,
     },
   });
 
@@ -69,8 +72,11 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
   const isEnrolled = session?.user ? course.enrollments!.length > 0 : false;
   const alreadyLikedCourse = session?.user ? course.likes!.length > 0 : false;
   const alreadyLikedCreator = session?.user ? course.user.likesReceived!.length > 0 : false;
+  const alreadySavedCourse = session?.user ? course.savedBy!.length > 0 : false;
   const isOwnCourse = session?.user?.id === course.userId;
   const showLikeButtons = !!session?.user && !isOwnCourse;
+  // Saving only makes sense before purchase — no reason to "save for later" something already owned.
+  const showSaveButton = !!session?.user && !isOwnCourse && !isEnrolled;
 
   const trailerEmbedUrl = course.trailerVideoId
     ? `https://iframe.mediadelivery.net/embed/${env.BUNNY_STREAM_TRAILER_LIBRARY_ID}/${course.trailerVideoId}`
@@ -132,6 +138,8 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
           isEnrolled={isEnrolled}
           alreadyLikedCourse={alreadyLikedCourse}
           showLikeButton={showLikeButtons}
+          alreadySavedCourse={alreadySavedCourse}
+          showSaveButton={showSaveButton}
         />
       </div>
     </div>

@@ -28,7 +28,8 @@ const navigationItems = [
     {name: 'Home', href: '/'},
     {name: 'Courses', href: '/courses'},
     {name: 'Instructor', href: '/instructor'},
-    {name: 'Profile', href: '/profile'}
+    {name: 'Profile', href: '/profile'},
+    {name: 'Library', href: '/library'}
 ]
 
 export default function NavBar() {
@@ -55,7 +56,7 @@ export default function NavBar() {
                     <span className="font-bold text-base">{APP_NAME}</span>
                 </Link>
 
-                <nav className="hidden md:flex md:flex-1 md:items-center md:justify-between ">
+                <nav className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-between ">
                     <div className="flex item-center space-x-2 gap-6">
                     {navigationItems.map((item) => (  
                         <Link 
@@ -89,7 +90,7 @@ export default function NavBar() {
 
                 </nav>
 
-<div className="ml-auto flex items-center gap-2 md:hidden">
+<div className="ml-auto flex items-center gap-2 lg:hidden">
     {isPending ? (
         <Skeleton className="size-9 rounded-md" />
     ) : session && !hideAvatar ? (

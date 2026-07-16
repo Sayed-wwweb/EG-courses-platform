@@ -18,10 +18,6 @@ import {
     SheetTitle,
     SheetClose,
 } from "@/components/ui/sheet";
-import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useState, FormEvent } from "react";
 import { GlobalSearch } from "@/components/search/global-search";
 
 const navigationItems = [
@@ -36,15 +32,6 @@ export default function NavBar() {
     const {data: session, isPending} = authClient.useSession();
     const pathname = usePathname();
     const hideAvatar = pathname === "/profile";
-    const router = useRouter();
-    const [searchQuery, setSearchQuery] = useState("");
-
-    function handleSearch(e: FormEvent) {
-        e.preventDefault();
-        if (searchQuery.trim()) {
-            router.push(`/courses?search=${encodeURIComponent(searchQuery.trim())}`);
-        }
-    }
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95
          backdrop-blur-[backdrop-filter];bg-background/60">

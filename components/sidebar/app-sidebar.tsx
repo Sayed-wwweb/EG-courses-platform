@@ -43,14 +43,6 @@ const data = {
         />
       ),
     },
-    {
-      title: "Settings",
-      url: "#",
-      icon: (
-        <Settings2Icon
-        />
-      ),
-    },
   ],
 
 }

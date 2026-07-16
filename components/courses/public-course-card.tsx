@@ -1,10 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Clock, DollarSign, GraduationCap } from "lucide-react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { BookOpen, Clock, ArrowUpRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
+
 interface PublicCourseCardProps {
   course: {
     slug: string;
@@ -24,68 +24,84 @@ interface PublicCourseCardProps {
 
 export function PublicCourseCard({ course }: PublicCourseCardProps) {
   return (
-    <Card className="overflow-hidden p-0 h-full flex flex-col">
-      <div className="relative w-full aspect-video">
-        {course.fileKey ? (
-          <Image
-            src={`${env.NEXT_PUBLIC_BUNNY_CDN_URL}/${course.fileKey}`}
-            alt={course.title}
-            className="object-cover"
-            fill
-          />
-        ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <BookOpen className="size-10 text-muted-foreground" />
-          </div>
-        )}
-      </div>
-
-      <CardContent className="pt-4 pb-2 space-y-2 flex-1">
-        <h3 className="font-semibold text-base leading-tight line-clamp-2">
-          {course.title}
-        </h3>
-        <p className="text-sm text-muted-foreground line-clamp-2">
-          {course.smallDescription}
-        </p>
-
-        <div className="flex items-center gap-2 pt-1">
-          <div className="relative size-6 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
-            {course.user.image ? (
-              <Image src={course.user.image} alt={course.user.name} fill className="object-cover" />
-            ) : (
-              <span className="text-[10px] font-medium">
-                {course.user.name?.[0]?.toUpperCase() ?? "?"}
-              </span>
-            )}
-          </div>
-          <span className="text-xs text-muted-foreground truncate">{course.user.name}</span>
+    <div className="group flex h-full flex-col overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 transition-all duration-200 hover:shadow-md hover:-translate-y-0.75">
+      <Link href={`/courses/${course.slug}`} className="flex flex-1 flex-col">
+        <div className="relative w-full aspect-video shrink-0 overflow-hidden bg-muted">
+          {course.fileKey ? (
+            <Image
+              src={`${env.NEXT_PUBLIC_BUNNY_CDN_URL}/${course.fileKey}`}
+              alt={course.title}
+              className="object-cover"
+              fill
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <BookOpen className="size-10 text-muted-foreground" />
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none rounded-full")}>
-            <Clock className="size-3.5" /> {course.duration}h
-          </span>
-          <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none rounded-full ml-auto border-green-500 text-green-500 hover:text-green-500")}>
-            <DollarSign className="size-3.5" /> {course.price} EGP
-          </span>
-        </div>
+        <div className="flex flex-1 flex-col gap-2 px-4 pt-4 ">
+          {course.university && (
+            <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {course.university}
+            </p>
+          )}
 
-        {course.university && (
-          <p className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none rounded-full w-full")}>
-            <GraduationCap className="size-3.5 shrink-0" />
-            <span className="truncate">{course.university}</span>
+          <h3 className="line-clamp-2 text-base font-semibold leading-snug text-foreground">
+            {course.title}
+          </h3>
+
+          <p className="line-clamp-2 text-sm text-muted-foreground">
+            {course.smallDescription}
           </p>
-        )}
-      </CardContent>
 
-      <CardFooter className="pt-2 pb-4 px-4">
+          <div className="mt-auto flex items-center gap-2 pt-2">
+            <div className="relative size-6 shrink-0 overflow-hidden rounded-full bg-muted">
+              {course.user.image ? (
+                <Image
+                  src={course.user.image}
+                  alt={course.user.name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <span className="text-[10px] font-medium">
+                    {course.user.name?.[0]?.toUpperCase() ?? "?"}
+                  </span>
+                </div>
+              )}
+            </div>
+            <span className="truncate text-xs text-muted-foreground">
+              {course.user.name}
+            </span>
+            <span className="text-muted-foreground/40">&bull;</span>
+            <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="size-3.5" />
+              {course.duration}h
+            </span>
+          </div>
+
+          
+          <span className="text-primary">
+            {course.price}{" "}
+            <span className="text-xs font-normaltext-muted-foreground">EGP</span>
+          </span>
+          
+        </div>
+      </Link>
+
+      
+      <div className="flex flex-col gap-3 items-end border-t bg-muted/40 px-4 py-3">
         <Link
           href={`/courses/${course.slug}`}
-          className={cn(buttonVariants({ size: "sm" }), "w-full")}
+          className={cn(buttonVariants({ size: "sm" }), "gap-1 w-full")}
         >
           Explore course
+          <ArrowUpRight className="size-3.5" />
         </Link>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

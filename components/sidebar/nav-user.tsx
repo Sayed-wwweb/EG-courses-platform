@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useSignout } from "@/hooks/use-signout"
 import { authClient } from "@/lib/auth-client"
-import { EllipsisVerticalIcon, LogOutIcon, HomeIcon, LayoutDashboard, Tv2 } from "lucide-react"
+import { EllipsisVerticalIcon, LogOutIcon, HomeIcon, LayoutDashboard, Tv2, User } from "lucide-react"
 import Link from "next/link"
 
 export function NavUser() {
@@ -119,27 +119,12 @@ export function NavUser() {
             <DropdownMenuGroup>
 
               <DropdownMenuItem asChild>
-                <Link href="/">
-                  <HomeIcon />
-                  home page
+                <Link href="/profile">
+                  <User />
+                  Profile
                 </Link>
               </DropdownMenuItem>
 
-              <DropdownMenuItem asChild>
-                <Link href="/instructor">
-                  <LayoutDashboard
-                  />
-                  Dashboard
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link href="/admin/courses">
-                  <Tv2
-                  />
-                  courses
-                </Link>
-              </DropdownMenuItem>
 
             </DropdownMenuGroup>
 

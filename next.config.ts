@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "el-sayed-platform.b-cdn.net",
+        hostname: "eg-courses-platform.b-cdn.net",
       },
       {
         protocol: "https",

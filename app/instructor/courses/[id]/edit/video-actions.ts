@@ -3,10 +3,41 @@
 import crypto from "crypto";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+
+// ---------- AUTH HELPER ----------
+// Every function below must confirm: (1) there's a logged-in user, and
+// (2) that user owns the course the chapter/video belongs to.
+// Without this, any signed-in user could edit or delete another
+// instructor's content just by knowing/guessing an id.
+
+async function requireCourseOwner(courseId: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) {
+    return { error: "You must be logged in." } as const;
+  }
+
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: { userId: true },
+  });
+
+  if (!course || course.userId !== session.user.id) {
+    return { error: "You don't have access to this course." } as const;
+  }
+
+  return { session } as const;
+}
 
 // ---------- 1. CREATE CHAPTER ----------
 
 export async function createChapter(courseId: string, title: string) {
+  const auth = await requireCourseOwner(courseId);
+  if ("error" in auth) {
+    return { status: "error" as const, message: auth.error };
+  }
+
   try {
     const chapterCount = await prisma.chapter.count({
       where: { courseId },
@@ -30,6 +61,11 @@ export async function createChapter(courseId: string, title: string) {
 // ---------- 1b. GET CHAPTERS (with their videos) FOR A COURSE ----------
 
 export async function getChapters(courseId: string) {
+  const auth = await requireCourseOwner(courseId);
+  if ("error" in auth) {
+    return { status: "error" as const, message: auth.error };
+  }
+
   try {
     const chapters = await prisma.chapter.findMany({
       where: { courseId },
@@ -60,6 +96,11 @@ export async function deleteVideo(videoId: string) {
       return { status: "error" as const, message: "Video not found" };
     }
 
+    const auth = await requireCourseOwner(video.courseId);
+    if ("error" in auth) {
+      return { status: "error" as const, message: auth.error };
+    }
+
     const bunnyResponse = await fetch(
       `https://video.bunnycdn.com/library/${env.BUNNY_STREAM_LIBRARY_ID}/videos/${video.bunnyVideoId}`,
       {
@@ -88,6 +129,11 @@ export async function deleteVideo(videoId: string) {
 // ---------- 1d. POLL BUNNY FOR STILL-PROCESSING VIDEOS ----------
 
 export async function syncProcessingVideos(courseId: string) {
+  const auth = await requireCourseOwner(courseId);
+  if ("error" in auth) {
+    return { status: "error" as const, message: auth.error };
+  }
+
   try {
     const processingVideos = await prisma.video.findMany({
       where: { courseId, status: "PROCESSING" },
@@ -133,6 +179,10 @@ export async function syncProcessingVideos(courseId: string) {
 }
 
 // ---------- 1e. GET SINGLE VIDEO (for playback page) ----------
+// NOTE: this is used by the instructor edit/playback page. It intentionally
+// only allows the owning instructor. If you later want *students* to watch
+// via this action too, add a separate enrollment check branch rather than
+// loosening this one.
 
 export async function getVideo(videoId: string) {
   try {
@@ -143,6 +193,11 @@ export async function getVideo(videoId: string) {
 
     if (!video) {
       return { status: "error" as const, message: "Video not found" };
+    }
+
+    const auth = await requireCourseOwner(video.courseId);
+    if ("error" in auth) {
+      return { status: "error" as const, message: auth.error };
     }
 
     return { status: "success" as const, data: video };
@@ -165,7 +220,22 @@ export async function createVideoUpload({
   chapterId,
   courseId,
 }: CreateVideoUploadInput) {
+  const auth = await requireCourseOwner(courseId);
+  if ("error" in auth) {
+    return { status: "error" as const, message: auth.error };
+  }
+
   try {
+    // Make sure the chapter actually belongs to this course (not some
+    // other instructor's chapter id passed in by mistake or on purpose).
+    const chapter = await prisma.chapter.findUnique({
+      where: { id: chapterId },
+      select: { courseId: true },
+    });
+    if (!chapter || chapter.courseId !== courseId) {
+      return { status: "error" as const, message: "Chapter not found for this course" };
+    }
+
     const bunnyResponse = await fetch(
       `https://video.bunnycdn.com/library/${env.BUNNY_STREAM_LIBRARY_ID}/videos`,
       {
@@ -233,12 +303,25 @@ export async function createVideoUpload({
 
 export async function updateChapterTitle(chapterId: string, title: string) {
   try {
-    const chapter = await prisma.chapter.update({
+    const chapter = await prisma.chapter.findUnique({
+      where: { id: chapterId },
+      select: { courseId: true },
+    });
+    if (!chapter) {
+      return { status: "error" as const, message: "Chapter not found" };
+    }
+
+    const auth = await requireCourseOwner(chapter.courseId);
+    if ("error" in auth) {
+      return { status: "error" as const, message: auth.error };
+    }
+
+    const updated = await prisma.chapter.update({
       where: { id: chapterId },
       data: { title },
     });
 
-    return { status: "success" as const, data: chapter };
+    return { status: "success" as const, data: updated };
   } catch (error) {
     console.error("updateChapterTitle error:", error);
     return { status: "error" as const, message: "Failed to rename chapter" };
@@ -256,6 +339,11 @@ export async function deleteChapter(chapterId: string) {
 
     if (!chapter) {
       return { status: "error" as const, message: "Chapter not found" };
+    }
+
+    const auth = await requireCourseOwner(chapter.courseId);
+    if ("error" in auth) {
+      return { status: "error" as const, message: auth.error };
     }
 
     for (const video of chapter.videos) {
@@ -285,11 +373,24 @@ export async function deleteChapter(chapterId: string) {
 
 export async function updateVideoTitle(videoId: string, title: string) {
   try {
-    const video = await prisma.video.update({
+    const video = await prisma.video.findUnique({
+      where: { id: videoId },
+      select: { courseId: true },
+    });
+    if (!video) {
+      return { status: "error" as const, message: "Video not found" };
+    }
+
+    const auth = await requireCourseOwner(video.courseId);
+    if ("error" in auth) {
+      return { status: "error" as const, message: auth.error };
+    }
+
+    const updated = await prisma.video.update({
       where: { id: videoId },
       data: { title },
     });
-    return { status: "success" as const, data: video };
+    return { status: "success" as const, data: updated };
   } catch (error) {
     console.error("updateVideoTitle error:", error);
     return { status: "error" as const, message: "Failed to rename video" };
@@ -305,7 +406,49 @@ interface VideoPositionUpdate {
 }
 
 export async function reorderVideos(updates: VideoPositionUpdate[]) {
+  if (updates.length === 0) {
+    return { status: "success" as const };
+  }
+
   try {
+    // Confirm every video being moved belongs to courses the caller owns.
+    // Doing this in one query keeps it cheap even for larger reorders.
+    const videoIds = updates.map((u) => u.videoId);
+    const videos = await prisma.video.findMany({
+      where: { id: { in: videoIds } },
+      select: { id: true, courseId: true },
+    });
+
+    if (videos.length !== videoIds.length) {
+      return { status: "error" as const, message: "One or more videos not found" };
+    }
+
+    const courseIds = [...new Set(videos.map((v) => v.courseId))];
+
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return { status: "error" as const, message: "You must be logged in." };
+    }
+
+    const ownedCourses = await prisma.course.count({
+      where: { id: { in: courseIds }, userId: session.user.id },
+    });
+
+    if (ownedCourses !== courseIds.length) {
+      return { status: "error" as const, message: "You don't have access to one or more of these videos." };
+    }
+
+    // Also confirm the destination chapters belong to the same set of courses.
+    const chapterIds = [...new Set(updates.map((u) => u.chapterId))];
+    const chapters = await prisma.chapter.findMany({
+      where: { id: { in: chapterIds } },
+      select: { id: true, courseId: true },
+    });
+
+    if (chapters.length !== chapterIds.length || chapters.some((c) => !courseIds.includes(c.courseId))) {
+      return { status: "error" as const, message: "Invalid destination chapter." };
+    }
+
     await prisma.$transaction(
       updates.map((u) =>
         prisma.video.update({

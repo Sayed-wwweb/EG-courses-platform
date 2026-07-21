@@ -17,14 +17,31 @@ export async function GET(
 
   const file = await prisma.courseFile.findUnique({
     where: { id: fileId },
-    include: { course: { select: { userId: true } } },
+    include: { course: { select: { id: true, userId: true } } },
   });
 
   if (!file) {
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 
-  if (file.course.userId !== session.user.id) {
+  const isOwner = file.course.userId === session.user.id;
+
+  // Not the instructor — check for an active (paid) enrollment instead.
+  let hasAccess = isOwner;
+  if (!hasAccess) {
+    const enrollment = await prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId: session.user.id,
+          courseId: file.course.id,
+        },
+      },
+      select: { status: true },
+    });
+    hasAccess = enrollment?.status === "ACTIVE";
+  }
+
+  if (!hasAccess) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

@@ -15,6 +15,15 @@ export default async function AdminPage( { children  } : { children: ReactNode})
     if (!session) {
       redirect("/login");
   }
+
+  // Session alone isn't enough — this route group is instructor-only.
+  // Without this check, any logged-in student could open the full
+  // instructor UI shell (sidebar, dashboard, course creation) even
+  // though the individual server actions underneath still enforce
+  // per-course ownership.
+  if (session.user.role !== "INSTRUCTOR") {
+    redirect("/");
+  }
   
 
   return (
@@ -40,4 +49,3 @@ export default async function AdminPage( { children  } : { children: ReactNode})
     </SidebarProvider>
   )
 }
-

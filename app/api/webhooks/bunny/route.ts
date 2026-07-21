@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { env } from "@/lib/env";
+import { NextRequest, NextResponse } from "next/server";
 
 interface BunnyWebhookPayload {
   VideoLibraryId: number;
@@ -7,8 +8,17 @@ interface BunnyWebhookPayload {
   Status: number;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Bunny doesn't sign its webhook payloads, so we secure this endpoint
+    // with a shared secret embedded in the callback URL configured in the
+    // Bunny dashboard (e.g. .../api/webhooks/bunny?secret=xxxx). Without
+    // this, anyone who finds the URL could POST fake "video ready" events.
+    const secret = request.nextUrl.searchParams.get("secret");
+    if (secret !== env.BUNNY_WEBHOOK_SECRET) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const payload: BunnyWebhookPayload = await request.json();
     const { VideoGuid, Status } = payload;
 

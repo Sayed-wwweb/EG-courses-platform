@@ -19,6 +19,7 @@ export const env = createEnv({
     BUNNY_STREAM_API_KEY: z.string().min(1),
     BUNNY_STREAM_TRAILER_LIBRARY_ID: z.string().min(1),
     BUNNY_STREAM_TRAILER_API_KEY: z.string().min(1),
+    BUNNY_WEBHOOK_SECRET: z.string().min(1),
     PAYMOB_SECRET_KEY: z.string().min(1),
     PAYMOB_PUBLIC_KEY: z.string().min(1),
     PAYMOB_HMAC_SECRET: z.string().min(1),

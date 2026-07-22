@@ -125,3 +125,53 @@ export const courseSchema = z.object({
 })
 
 export type CourseSchemaType = z.infer<typeof courseSchema>
+
+// ---------- BECOME INSTRUCTOR / PAYOUT INFO ----------
+
+export const payoutMethods = ["MOBILE_WALLET", "BANK_ACCOUNT", "INSTAPAY"] as const;
+
+// Egyptian mobile numbers: 01 followed by 0/1/2/5 then 8 more digits (11 digits total)
+const egyptianMobileRegex = /^01[0125][0-9]{8}$/;
+
+// Egyptian IBAN: "EG" + 2 check digits + 25 alphanumeric characters (29 total)
+const egyptianIbanRegex = /^EG[0-9]{2}[A-Z0-9]{25}$/i;
+
+// InstaPay accepts either a phone number or an InstaPay ID (name@instapay)
+const instapayIdRegex = /^[a-zA-Z0-9_.-]+@instapay$/i;
+
+export const becomeInstructorSchema = z
+  .object({
+    payoutMethod: z.enum(payoutMethods, {
+      message: "Please choose how you'd like to receive payouts",
+    }),
+    payoutNumber: z
+      .string()
+      .min(1, { message: "This field is required" }),
+  })
+  .superRefine((data, ctx) => {
+    const value = data.payoutNumber.trim();
+    let isValid = false;
+    let message = "";
+
+    if (data.payoutMethod === "MOBILE_WALLET") {
+      isValid = egyptianMobileRegex.test(value);
+      message = "Enter a valid Egyptian mobile number (e.g. 01012345678)";
+    } else if (data.payoutMethod === "BANK_ACCOUNT") {
+      isValid = egyptianIbanRegex.test(value.replace(/\s/g, ""));
+      message = "Enter a valid Egyptian IBAN (starts with EG, 29 characters)";
+    } else {
+      // InstaPay: accept either a phone number or an InstaPay ID
+      isValid = egyptianMobileRegex.test(value) || instapayIdRegex.test(value);
+      message = "Enter a valid phone number or InstaPay ID (e.g. yourname@instapay)";
+    }
+
+    if (!isValid) {
+      ctx.addIssue({
+        code: "custom",
+        message,
+        path: ["payoutNumber"],
+      });
+    }
+  });
+
+export type BecomeInstructorSchemaType = z.infer<typeof becomeInstructorSchema>;

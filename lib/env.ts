@@ -20,6 +20,9 @@ export const env = createEnv({
     BUNNY_STREAM_TRAILER_LIBRARY_ID: z.string().min(1),
     BUNNY_STREAM_TRAILER_API_KEY: z.string().min(1),
     BUNNY_WEBHOOK_SECRET: z.string().min(1),
+    // Must be a 32-byte key, hex-encoded (64 hex characters). Generate with:
+    // openssl rand -hex 32
+    PAYOUT_ENCRYPTION_KEY: z.string().length(64),
     PAYMOB_SECRET_KEY: z.string().min(1),
     PAYMOB_PUBLIC_KEY: z.string().min(1),
     PAYMOB_HMAC_SECRET: z.string().min(1),

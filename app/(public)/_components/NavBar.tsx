@@ -23,15 +23,21 @@ import { GlobalSearch } from "@/components/search/global-search";
 const navigationItems = [
     {name: 'Home', href: '/'},
     {name: 'Courses', href: '/courses'},
-    {name: 'Instructor', href: '/instructor'},
+    {name: 'Library', href: '/library'},
     {name: 'Profile', href: '/profile'},
-    {name: 'Library', href: '/library'}
+    { name: 'Instructor', href: '/instructor', requiresInstructor: true },
 ]
 
 export default function NavBar() {
     const {data: session, isPending} = authClient.useSession();
     const pathname = usePathname();
     const hideAvatar = pathname === "/profile";
+    const isInstructor = session?.user.role === "INSTRUCTOR";
+    // Hide the Instructor tab until the user has actually become one —
+    // otherwise every visitor sees a tab that just redirects them away.
+    const visibleNavItems = navigationItems.filter(
+        (item) => !item.requiresInstructor || isInstructor
+    );
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95
          backdrop-blur-[backdrop-filter];bg-background/60">
@@ -45,7 +51,7 @@ export default function NavBar() {
 
                 <nav className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-between ">
                     <div className="flex item-center space-x-2 gap-6">
-                    {navigationItems.map((item) => (  
+                    {visibleNavItems.map((item) => (  
                         <Link 
                             key={item.name} 
                             href={item.href} 
@@ -106,7 +112,7 @@ export default function NavBar() {
                 <GlobalSearch onNavigate={() => {/* sheet closes automatically on route change */}} />
             </div>
             <div className="flex flex-col gap-2 px-4">
-                {navigationItems.map((item) => (
+                {visibleNavItems.map((item) => (
                     <SheetClose asChild key={item.name}>
                         <Link
                             href={item.href}

@@ -147,9 +147,9 @@ const user = await prisma.user.findUnique({
               </Button>
             </div>
           ) : (
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 md:flex-row flex-col">
               <div>
-                <p className="font-medium">Become an instructor</p>
+                <p className="font-medium md:w-full">Become an instructor</p>
                 <p className="text-sm text-muted-foreground">
                   Create and sell your own courses on the platform.
                 </p>

@@ -17,11 +17,18 @@ export default async function LibraryPage() {
     title: true,
     smallDescription: true,
     duration: true,
+    createdAt: true,
     price: true,
     level: true,
     university: true,
     fileKey: true,
     user: { select: { name: true, image: true } },
+    _count: {
+      select: {
+        enrollments: { where: { status: "ACTIVE" } },
+        likes: true,
+      },
+    },
   } as const;
 
   const [enrollments, savedCourses] = await Promise.all([
@@ -37,8 +44,16 @@ export default async function LibraryPage() {
     }),
   ]);
 
-  const purchasedCourses = enrollments.map((e) => e.course);
-  const savedCoursesList = savedCourses.map((s) => s.course);
+  const purchasedCourses = enrollments.map((e) => ({
+    ...e.course,
+    enrolledCount: e.course._count.enrollments,
+    likeCount: e.course._count.likes,
+  }));
+  const savedCoursesList = savedCourses.map((s) => ({
+    ...s.course,
+    enrolledCount: s.course._count.enrollments,
+    likeCount: s.course._count.likes,
+  }));
 
   return (
     <div className="py-8 space-y-10">

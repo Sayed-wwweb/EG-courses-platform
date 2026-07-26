@@ -1,9 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Clock, ArrowUpRight } from "lucide-react";
+import { BookOpen, Clock, GraduationCap, Heart, ArrowUpRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
+import { formatRelativeTime } from "@/lib/format-relative-time";
+import { formatCompactNumber } from "@/lib/format-count";
 
 interface PublicCourseCardProps {
   course: {
@@ -11,10 +13,13 @@ interface PublicCourseCardProps {
     title: string;
     smallDescription: string;
     duration: number;
+    createdAt: Date;
     price: number;
     level: string;
     university: string | null;
     fileKey: string | null;
+    enrolledCount: number;
+    likeCount: number;
     user: {
       name: string;
       image: string | null;
@@ -56,7 +61,7 @@ export function PublicCourseCard({ course }: PublicCourseCardProps) {
             {course.smallDescription}
           </p>
 
-          <div className="mt-auto flex items-center gap-2 pt-2">
+          <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
             <div className="relative size-6 shrink-0 overflow-hidden rounded-full bg-muted">
               {course.user.image ? (
                 <Image
@@ -81,9 +86,23 @@ export function PublicCourseCard({ course }: PublicCourseCardProps) {
               <Clock className="size-3.5" />
               {course.duration}h
             </span>
+            <span className="text-muted-foreground/40">&bull;</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {formatRelativeTime(course.createdAt)}
+            </span>
           </div>
 
-          
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <GraduationCap className="size-3.5" />
+              {formatCompactNumber(course.enrolledCount)} enrolled
+            </span>
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Heart className="size-3.5" />
+              {formatCompactNumber(course.likeCount)}
+            </span>
+          </div>
+
           <span className="text-primary">
             {course.price}{" "}
             <span className="text-xs font-normaltext-muted-foreground">EGP</span>

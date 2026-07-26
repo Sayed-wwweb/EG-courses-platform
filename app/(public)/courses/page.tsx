@@ -23,12 +23,19 @@ export default async function CoursesPage({
         title: true,
         smallDescription: true,
         duration: true,
+        createdAt: true,
         price: true,
         level: true,
         university: true,
         fileKey: true,
         user: {
           select: { name: true, image: true },
+        },
+        _count: {
+          select: {
+            enrollments: { where: { status: "ACTIVE" } },
+            likes: true,
+          },
         },
       },
     }),
@@ -64,7 +71,14 @@ export default async function CoursesPage({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => (
-            <PublicCourseCard key={course.slug} course={course} />
+            <PublicCourseCard
+              key={course.slug}
+              course={{
+                ...course,
+                enrolledCount: course._count.enrollments,
+                likeCount: course._count.likes,
+              }}
+            />
           ))}
         </div>
       )}

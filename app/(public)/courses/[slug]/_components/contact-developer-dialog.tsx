@@ -26,7 +26,7 @@ export function ContactDeveloperDialog({ price }: ContactDeveloperDialogProps) {
     <Dialog>
       <DialogTrigger asChild>
         <Button type="button" className={cn(buttonVariants({ size: "default" }), "flex-1")}>
-          Contact developer — <span className="font-semibold">{price} EGP</span>
+          Contact developer - <span>{price} EGP</span>
         </Button>
       </DialogTrigger>
       <DialogContent>

@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Clock, Library } from "lucide-react";
+import { BookOpen, Calendar, Clock, GraduationCap, Heart, Library } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
+import { formatFullDate } from "@/lib/format-relative-time";
+import { formatCompactNumber } from "@/lib/format-count";
 import { CourseLikeButton } from "./course-like-button";
 import { SaveCourseButton } from "./save-course-button";
 import { ContactDeveloperDialog } from "./contact-developer-dialog";
@@ -17,6 +19,7 @@ interface CourseSidebarProps {
     smallDescription: string;
     university: string | null;
     duration: number;
+    createdAt: Date;
     price: number;
     fileKey: string | null;
   };
@@ -25,6 +28,8 @@ interface CourseSidebarProps {
   showLikeButton: boolean;
   alreadySavedCourse: boolean;
   showSaveButton: boolean;
+  enrolledCount: number;
+  likeCount: number;
 }
 
 export function CourseSidebar({
@@ -34,6 +39,8 @@ export function CourseSidebar({
   showLikeButton,
   alreadySavedCourse,
   showSaveButton,
+  enrolledCount,
+  likeCount,
 }: CourseSidebarProps) {
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
@@ -74,11 +81,25 @@ export function CourseSidebar({
               <Clock className="size-3.5" />
               {course.duration}h
           </span>
-          
+          <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+              <Calendar className="size-3.5" />
+              {formatFullDate(course.createdAt)}
+          </span>
           
         </div>
 
-        
+        <div className="flex items-center gap-4 rounded-lg border bg-muted/30 px-3 py-2">
+          <span className="flex items-center gap-1.5 text-sm font-medium">
+            <GraduationCap className="size-4 text-muted-foreground" />
+            {formatCompactNumber(enrolledCount)}
+            <span className="text-xs font-normal text-muted-foreground">enrolled</span>
+          </span>
+          <span className="flex items-center gap-1.5 text-sm font-medium">
+            <Heart className="size-4 text-muted-foreground" />
+            {formatCompactNumber(likeCount)}
+            <span className="text-xs font-normal text-muted-foreground">likes</span>
+          </span>
+        </div>
 
         <div className="pt-2">
           {isEnrolled ? (

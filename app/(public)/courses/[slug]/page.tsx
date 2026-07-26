@@ -23,6 +23,7 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
       description: true,
       price: true,
       duration: true,
+      createdAt: true,
       university: true,
       fileKey: true,
       trailerVideoId: true,
@@ -62,6 +63,12 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
       savedBy: session?.user
         ? { where: { userId: session.user.id }, select: { id: true } }
         : undefined,
+      _count: {
+        select: {
+          enrollments: { where: { status: "ACTIVE" } },
+          likes: true,
+        },
+      },
     },
   });
 
@@ -140,6 +147,8 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
           showLikeButton={showLikeButtons}
           alreadySavedCourse={alreadySavedCourse}
           showSaveButton={showSaveButton}
+          enrolledCount={course._count.enrollments}
+          likeCount={course._count.likes}
         />
       </div>
     </div>

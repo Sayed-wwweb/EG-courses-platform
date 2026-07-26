@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Clock, DollarSign, GraduationCap, Library } from "lucide-react";
+import { BookOpen, Clock, Library } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
 import { CourseLikeButton } from "./course-like-button";
 import { SaveCourseButton } from "./save-course-button";
+import { ContactDeveloperDialog } from "./contact-developer-dialog";
 import { toggleCourseLike } from "../like-actions";
 import { toggleSavedCourse } from "../saved-actions";
 
@@ -101,13 +102,8 @@ export function CourseSidebar({
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link
-                href={`/${course.id}`}
-                className={cn(buttonVariants({ size: "default" }), "flex-1")}
-              >
-                Buy course — <span className="font-semibold">{course.price} EGP</span>
-              </Link>
-              
+              <ContactDeveloperDialog price={course.price} />
+
               {showSaveButton && (
                 <SaveCourseButton
                   courseId={course.id}

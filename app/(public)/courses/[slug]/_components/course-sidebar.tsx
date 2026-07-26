@@ -80,7 +80,7 @@ export function CourseSidebar({
         
 
         <div className="pt-2">
-          {isEnrolled === false ? (
+          {isEnrolled ? (
             <div className="flex items-center gap-2">
               {/* TODO: point this at the real enrolled-course-content route once it exists */}
               <Link

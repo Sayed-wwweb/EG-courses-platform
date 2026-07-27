@@ -174,6 +174,7 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
         <CourseSidebar
           course={course}
           isEnrolled={isEnrolled}
+          isOwnCourse={isOwnCourse}
           alreadyLikedCourse={alreadyLikedCourse}
           showLikeButton={showCourseLikeButton}
           alreadySavedCourse={alreadySavedCourse}

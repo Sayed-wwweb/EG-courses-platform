@@ -97,7 +97,7 @@ export function CourseComments({ courseId, comments, isLoggedIn }: CourseComment
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Ask a question about this course..."
-            className="min-h-16 resize-none"
+            className="min-h-8 resize-none"
             disabled={isPending}
           />
           <Button
@@ -118,7 +118,7 @@ export function CourseComments({ courseId, comments, isLoggedIn }: CourseComment
 
       {comments.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No comments yet — be the first to ask something.
+          No comments yet
         </p>
       ) : (
         <div className="space-y-3">

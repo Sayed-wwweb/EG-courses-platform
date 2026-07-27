@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Clock, GraduationCap, Heart, Library } from "lucide-react";
+import { BookOpen, Clock, GraduationCap, Heart, Library, Pencil } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
@@ -24,6 +24,7 @@ interface CourseSidebarProps {
     fileKey: string | null;
   };
   isEnrolled: boolean;
+  isOwnCourse: boolean;
   alreadyLikedCourse: boolean;
   showLikeButton: boolean;
   alreadySavedCourse: boolean;
@@ -35,6 +36,7 @@ interface CourseSidebarProps {
 export function CourseSidebar({
   course,
   isEnrolled,
+  isOwnCourse,
   alreadyLikedCourse,
   showLikeButton,
   alreadySavedCourse,
@@ -90,7 +92,12 @@ export function CourseSidebar({
         {/* Price/duration + created date */}
         <div className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
-            {isEnrolled ? (
+            {isOwnCourse ? (
+              <span className="text-primary">
+                <span className="font-semibold">{course.price}</span>{" "}
+                <span className="text-xs font-normal text-muted-foreground">EGP</span>
+              </span>
+            ) : isEnrolled ? (
               <span className="font-semibold text-primary">Owned</span>
             ) : (
               <span className="text-primary">
@@ -110,7 +117,15 @@ export function CourseSidebar({
         </div>
 
         <div className="pt-2">
-          {isEnrolled ? (
+          {isOwnCourse ? (
+            <Link
+              href={`/instructor/courses/${course.id}/edit`}
+              className={cn(buttonVariants({ size: "default" }), "w-full gap-1")}
+            >
+              Edit course
+              <Pencil className="size-3.5" />
+            </Link>
+          ) : isEnrolled ? (
             <div className="flex items-center gap-2">
               {/* TODO: point this at the real enrolled-course-content route once it exists */}
               <Link

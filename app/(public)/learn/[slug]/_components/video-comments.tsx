@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { postVideoComment, toggleCommentLike, toggleVideoLike } from "../actions";
+import { postVideoComment, toggleCommentLike } from "../actions";
 
 interface CommentItem {
   id: string;
@@ -20,51 +20,6 @@ interface CommentItem {
 interface VideoCommentsProps {
   videoId: string;
   comments: CommentItem[];
-  videoLikeCount: number;
-  videoLikedByMe: boolean;
-}
-
-function VideoLikeButton({
-  videoId,
-  initialLiked,
-  initialCount,
-}: {
-  videoId: string;
-  initialLiked: boolean;
-  initialCount: number;
-}) {
-  const [liked, setLiked] = useState(initialLiked);
-  const [count, setCount] = useState(initialCount);
-  const [isPending, startTransition] = useTransition();
-
-  function handleClick() {
-    const next = !liked;
-    setLiked(next);
-    setCount((c) => (next ? c + 1 : c - 1));
-
-    startTransition(async () => {
-      const result = await toggleVideoLike(videoId);
-      if (result.error) {
-        setLiked(!next);
-        setCount((c) => (next ? c - 1 : c + 1));
-        toast.error(result.error);
-      }
-    });
-  }
-
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      onClick={handleClick}
-      disabled={isPending}
-      className="gap-2"
-    >
-      <Heart className={cn("size-4", liked && "fill-destructive text-destructive")} />
-      {count}
-    </Button>
-  );
 }
 
 function CommentLikeButton({
@@ -108,12 +63,7 @@ function CommentLikeButton({
   );
 }
 
-export function VideoComments({
-  videoId,
-  comments,
-  videoLikeCount,
-  videoLikedByMe,
-}: VideoCommentsProps) {
+export function VideoComments({ videoId, comments }: VideoCommentsProps) {
   const [content, setContent] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -133,21 +83,14 @@ export function VideoComments({
 
   return (
     <div className="rounded-xl border bg-card p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Comments</h2>
-        <VideoLikeButton
-          videoId={videoId}
-          initialLiked={videoLikedByMe}
-          initialCount={videoLikeCount}
-        />
-      </div>
+      <h2 className="text-lg font-semibold">Comments</h2>
 
       <div className="flex gap-2">
         <Textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Ask a question or leave a comment about this video..."
-          className="min-h-16 resize-none"
+          className="min-h-8 resize-none"
           disabled={isPending}
         />
         <Button

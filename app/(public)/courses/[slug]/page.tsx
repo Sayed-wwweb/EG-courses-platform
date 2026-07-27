@@ -93,9 +93,13 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
   const alreadyLikedCreator = session?.user ? course.user.likesReceived!.length > 0 : false;
   const alreadySavedCourse = session?.user ? course.savedBy!.length > 0 : false;
   const isOwnCourse = session?.user?.id === course.userId;
-  const showLikeButtons = !!session?.user && !isOwnCourse;
-  // Saving only makes sense before purchase — no reason to "save for later" something already owned.
-  const showSaveButton = !!session?.user && !isOwnCourse && !isEnrolled;
+
+  // Creator-like button: unrelated to enrollment, unchanged.
+  const showCreatorLikeButton = !!session?.user && !isOwnCourse;
+  // Course-like button (sidebar): only meaningful once you've actually taken the course.
+  const showCourseLikeButton = !!session?.user && !isOwnCourse && isEnrolled;
+  // Save button: available regardless of enrollment status now.
+  const showSaveButton = !!session?.user && !isOwnCourse;
 
   const trailerEmbedUrl = course.trailerVideoId
     ? `https://iframe.mediadelivery.net/embed/${env.BUNNY_STREAM_TRAILER_LIBRARY_ID}/${course.trailerVideoId}`
@@ -165,13 +169,13 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
         <CreatorCard
           user={course.user}
           alreadyLiked={alreadyLikedCreator}
-          showLikeButton={showLikeButtons}
+          showLikeButton={showCreatorLikeButton}
         />
         <CourseSidebar
           course={course}
           isEnrolled={isEnrolled}
           alreadyLikedCourse={alreadyLikedCourse}
-          showLikeButton={showLikeButtons}
+          showLikeButton={showCourseLikeButton}
           alreadySavedCourse={alreadySavedCourse}
           showSaveButton={showSaveButton}
           enrolledCount={course._count.enrollments}

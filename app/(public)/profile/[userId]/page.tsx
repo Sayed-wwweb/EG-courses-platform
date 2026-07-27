@@ -39,12 +39,24 @@ export default async function PublicProfilePage({
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
+          slug: true,
           title: true,
           smallDescription: true,
           duration: true,
+          createdAt: true,
           price: true,
           status: true,
+          university: true,
           fileKey: true,
+          enrollments: session?.user
+            ? { where: { userId: session.user.id, status: "ACTIVE" }, select: { id: true } }
+            : undefined,
+          _count: {
+            select: {
+              enrollments: { where: { status: "ACTIVE" } },
+              likes: true,
+            },
+          },
         },
       },
       _count: {
@@ -67,6 +79,13 @@ export default async function PublicProfilePage({
   }
 
   const alreadyLiked = session?.user ? user.likesReceived.length > 0 : false;
+
+  const coursesWithCounts = user.courses.map((course) => ({
+    ...course,
+    enrolledCount: course._count.enrollments,
+    likeCount: course._count.likes,
+    isEnrolled: session?.user ? course.enrollments!.length > 0 : false,
+  }));
 
   return (
     <div className="mx-auto max-w-3xl pb-16">
@@ -132,7 +151,12 @@ export default async function PublicProfilePage({
         {user.role === "INSTRUCTOR" && (
           <div className="mt-8">
             <h2 className="text-sm font-medium text-muted-foreground mb-3">Courses</h2>
-            <ProfileCoursesGrid courses={user.courses} />
+            <ProfileCoursesGrid
+              courses={coursesWithCounts}
+              isOwnProfile={false}
+              creatorName={user.name}
+              creatorImage={user.image}
+            />
           </div>
         )}
       </div>

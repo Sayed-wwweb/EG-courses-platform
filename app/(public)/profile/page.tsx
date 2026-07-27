@@ -41,12 +41,21 @@ const user = await prisma.user.findUnique({
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
+          slug: true,
           title: true,
           smallDescription: true,
           duration: true,
+          createdAt: true,
           price: true,
           status: true,
+          university: true,
           fileKey: true,
+          _count: {
+            select: {
+              enrollments: { where: { status: "ACTIVE" } },
+              likes: true,
+            },
+          },
         },
       },
       _count: {
@@ -61,6 +70,12 @@ const user = await prisma.user.findUnique({
   if (!user) {
     redirect("/login");
   }
+
+  const coursesWithCounts = user.courses.map((course) => ({
+    ...course,
+    enrolledCount: course._count.enrollments,
+    likeCount: course._count.likes,
+  }));
 
   return (
     <div className="mx-auto max-w-3xl pb-16">
@@ -154,7 +169,12 @@ const user = await prisma.user.findUnique({
             <h2 className="text-2xl font-bold mb-10">
               Courses
             </h2>
-            <ProfileCoursesGrid courses={user.courses} />
+            <ProfileCoursesGrid
+              courses={coursesWithCounts}
+              isOwnProfile={true}
+              creatorName={user.name}
+              creatorImage={user.image}
+            />
           </div>
         )}
       </div>

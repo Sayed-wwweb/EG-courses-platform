@@ -44,15 +44,25 @@ export default async function LibraryPage() {
     }),
   ]);
 
+  // This section only ever lists ACTIVE enrollments, so every course here
+  // is, by definition, one the user is enrolled in.
   const purchasedCourses = enrollments.map((e) => ({
     ...e.course,
     enrolledCount: e.course._count.enrollments,
     likeCount: e.course._count.likes,
+    isEnrolled: true,
   }));
+
+  // Saving a course you're already enrolled in isn't possible through the
+  // UI (course-sidebar hides the save button once enrolled), so this is
+  // always false in practice — but we compute it explicitly rather than
+  // hardcoding, in case that assumption ever changes later.
+  const enrolledCourseIds = new Set(enrollments.map((e) => e.course.slug));
   const savedCoursesList = savedCourses.map((s) => ({
     ...s.course,
     enrolledCount: s.course._count.enrollments,
     likeCount: s.course._count.likes,
+    isEnrolled: enrolledCourseIds.has(s.course.slug),
   }));
 
   return (

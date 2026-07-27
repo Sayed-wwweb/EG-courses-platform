@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { CoursesFilters } from "@/components/courses/courses-filters";
 import { PublicCourseCard } from "@/components/courses/public-course-card";
 import { BookOpen } from "lucide-react";
@@ -9,6 +11,7 @@ export default async function CoursesPage({
   searchParams: Promise<{ search?: string; university?: string }>;
 }) {
   const { search, university } = await searchParams;
+  const session = await auth.api.getSession({ headers: await headers() });
 
   const [courses, universityRows] = await Promise.all([
     prisma.course.findMany({
@@ -31,6 +34,9 @@ export default async function CoursesPage({
         user: {
           select: { name: true, image: true },
         },
+        enrollments: session?.user
+          ? { where: { userId: session.user.id, status: "ACTIVE" }, select: { id: true } }
+          : undefined,
         _count: {
           select: {
             enrollments: { where: { status: "ACTIVE" } },
@@ -77,6 +83,7 @@ export default async function CoursesPage({
                 ...course,
                 enrolledCount: course._count.enrollments,
                 likeCount: course._count.likes,
+                isEnrolled: session?.user ? course.enrollments!.length > 0 : false,
               }}
             />
           ))}

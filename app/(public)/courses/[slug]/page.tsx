@@ -3,10 +3,12 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { env } from "@/lib/env";
+import { formatRelativeTime } from "@/lib/format-relative-time";
 import { CreatorCard } from "./_components/creator-card";
 import { LockedChapters } from "./_components/locked-chapters";
 import { LockedFiles } from "./_components/locked-files";
 import { CourseSidebar } from "./_components/course-sidebar";
+import { CourseComments } from "./_components/course-comments";
 
 type Params = Promise<{ slug: string }>;
 
@@ -54,6 +56,16 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
         orderBy: { createdAt: "asc" },
         select: { id: true, name: true, size: true },
       },
+      comments: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          content: true,
+          createdAt: true,
+          user: { select: { name: true, image: true } },
+          likes: { select: { userId: true } },
+        },
+      },
       enrollments: session?.user
         ? { where: { userId: session.user.id, status: "ACTIVE" }, select: { id: true } }
         : undefined,
@@ -89,10 +101,19 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
     ? `https://iframe.mediadelivery.net/embed/${env.BUNNY_STREAM_TRAILER_LIBRARY_ID}/${course.trailerVideoId}`
     : null;
 
+  const comments = course.comments.map((c) => ({
+    id: c.id,
+    content: c.content,
+    createdAt: formatRelativeTime(c.createdAt),
+    author: { name: c.user.name, image: c.user.image },
+    likeCount: c.likes.length,
+    likedByMe: session?.user ? c.likes.some((l) => l.userId === session.user.id) : false,
+  }));
+
   return (
     <div className="py-8 grid grid-cols-1 lg:grid-cols-[300px_1fr_320px] gap-6">
-      {/* Chapters + Files */}
-      <div className="space-y-6 order-3 lg:order-1">
+      {/* Chapters + Files — sticky so they stay visible while the description scrolls */}
+      <div className="space-y-6 order-3 lg:order-1 lg:sticky lg:top-20 lg:self-start">
         <div className="rounded-xl border bg-card p-4">
           <h2 className="text-lg font-semibold mb-3">Chapters</h2>
           <LockedChapters chapters={course.chapters} />
@@ -100,7 +121,7 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
         <LockedFiles files={course.files} />
       </div>
 
-      {/* Trailer + Description */}
+      {/* Trailer + Description + Comments */}
       <div className="space-y-6 order-2 lg:order-2">
         {trailerEmbedUrl && (
           <div
@@ -131,10 +152,16 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
             dangerouslySetInnerHTML={{ __html: course.description }}
           />
         </div>
+
+        <CourseComments
+          courseId={course.id}
+          comments={comments}
+          isLoggedIn={!!session?.user}
+        />
       </div>
 
-      {/* Creator + Sidebar */}
-      <div className="space-y-6 order-1 lg:order-3">
+      {/* Creator + Sidebar — sticky for the same reason as the left column */}
+      <div className="space-y-6 order-1 lg:order-3 lg:sticky lg:top-20 lg:self-start">
         <CreatorCard
           user={course.user}
           alreadyLiked={alreadyLikedCreator}

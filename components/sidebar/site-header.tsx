@@ -21,9 +21,9 @@ import {
 const navigationItems = [
     { name: 'Home', href: '/' },
     { name: 'Courses', href: '/courses' },
-    { name: 'Instructor', href: '/instructor' },
     { name: 'Profile', href: '/profile' },
-    { name: 'Library', href: '/library' }
+    { name: 'Library', href: '/library' },
+    { name: 'Instructor', href: '/instructor' },
 ]
 
 export function SiteHeader() {

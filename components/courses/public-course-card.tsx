@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Clock, GraduationCap, Heart, ArrowUpRight } from "lucide-react";
+import { BookOpen, Clock, GraduationCap, Heart, ArrowUpRight, PlayCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
@@ -20,6 +20,7 @@ interface PublicCourseCardProps {
     fileKey: string | null;
     enrolledCount: number;
     likeCount: number;
+    isEnrolled: boolean;
     user: {
       name: string;
       image: string | null;
@@ -28,9 +29,14 @@ interface PublicCourseCardProps {
 }
 
 export function PublicCourseCard({ course }: PublicCourseCardProps) {
+  // Enrolled students go straight to the study page — the marketplace
+  // page (description, "contact developer", etc.) has nothing new for
+  // them at that point.
+  const destination = course.isEnrolled ? `/learn/${course.slug}` : `/courses/${course.slug}`;
+
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 transition-all duration-200 hover:shadow-md hover:-translate-y-0.75">
-      <Link href={`/courses/${course.slug}`} className="flex flex-1 flex-col">
+      <Link href={destination} className="flex flex-1 flex-col">
         <div className="relative w-full aspect-video shrink-0 overflow-hidden bg-muted">
           {course.fileKey ? (
             <Image
@@ -114,11 +120,15 @@ export function PublicCourseCard({ course }: PublicCourseCardProps) {
       
       <div className="flex flex-col gap-3 items-end border-t bg-muted/40 px-4 py-3">
         <Link
-          href={`/courses/${course.slug}`}
+          href={destination}
           className={cn(buttonVariants({ size: "sm" }), "gap-1 w-full")}
         >
-          Explore course
-          <ArrowUpRight className="size-3.5" />
+          {course.isEnrolled ? "Open course" : "Explore course"}
+          {course.isEnrolled ? (
+            <PlayCircle className="size-3.5" />
+          ) : (
+            <ArrowUpRight className="size-3.5" />
+          )}
         </Link>
       </div>
     </div>

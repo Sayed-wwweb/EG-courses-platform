@@ -24,10 +24,15 @@ interface iAppProps {
     email: string;
     image: string;
     square?: boolean;
+    role?: string;
 }
 
-export function AvatarDropdown({name, image, square = false}: iAppProps) {
+export function AvatarDropdown({name, image, square = false, role}: iAppProps) {
   const handleSignout = useSignout();
+  // Same rule as the top nav bar: only instructors and admins get the
+  // Instructor link, otherwise a student sees a menu item that just
+  // redirects them away when clicked.
+  const isInstructor = role === "INSTRUCTOR" || role === "ADMIN";
 
   return (
     <DropdownMenu>
@@ -79,12 +84,14 @@ export function AvatarDropdown({name, image, square = false}: iAppProps) {
                 </Link>
             </DropdownMenuItem>
 
-          <DropdownMenuItem asChild>
+          {isInstructor && (
+            <DropdownMenuItem asChild>
                 <Link href="/instructor">
                     <LayoutDashboard className="size-4 mr-2" />
                     <span>Instructor</span>
                 </Link>
             </DropdownMenuItem>
+          )}
 
         </DropdownMenuGroup>
 

@@ -6,61 +6,6 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { uploadToBunny, deleteFromBunny } from "@/lib/bunny";
 import { env } from "@/lib/env";
-import { becomeInstructorSchema } from "@/lib/zodSchemas";
-import { encryptPayoutNumber, getLast4 } from "@/lib/payout-crypto";
-
-// Takes the payout form data (method + number), validates it, encrypts the
-// number, and sets the role to INSTRUCTOR — all in one step. The raw
-// payout number is never stored; only the encrypted value and a last-4
-// for display go in the database.
-export async function becomeInstructor(input: { payoutMethod: string; payoutNumber: string }) {
-  const session = await auth.api.getSession({ headers: await headers() });
-
-  if (!session?.user) {
-    return { status: "error" as const, message: "You must be logged in." };
-  }
-
-  const parsed = becomeInstructorSchema.safeParse(input);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0];
-    return { status: "error" as const, message: firstIssue?.message ?? "Invalid input." };
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-
-  if (!user) {
-    return { status: "error" as const, message: "User not found." };
-  }
-
-  if (user.role === "INSTRUCTOR") {
-    return { status: "error" as const, message: "You are already an instructor." };
-  }
-
-  try {
-    const { payoutMethod, payoutNumber } = parsed.data;
-
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        role: "INSTRUCTOR",
-        payoutMethod,
-        payoutNumberEncrypted: encryptPayoutNumber(payoutNumber),
-        payoutNumberLast4: getLast4(payoutNumber),
-      },
-    });
-
-    revalidatePath("/profile");
-    revalidatePath("/instructor");
-
-    return { status: "success" as const };
-  } catch (err) {
-    console.error("Become instructor error:", err);
-    return { status: "error" as const, message: "Something went wrong. Please try again." };
-  }
-}
 
 export async function uploadAvatar(formData: FormData) {
   const session = await auth.api.getSession({ headers: await headers() });

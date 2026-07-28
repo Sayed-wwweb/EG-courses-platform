@@ -10,12 +10,7 @@ datasource db {
 enum UserRole {
   STUDENT
   INSTRUCTOR
-}
-
-enum PayoutMethod {
-  MOBILE_WALLET
-  BANK_ACCOUNT
-  INSTAPAY
+  ADMIN
 }
 
 enum CourseLevel {
@@ -58,14 +53,6 @@ model User {
   whatsappNumber String?
   socialLinks    Json?
 
-  // Instructor payout info — filled in via the "Become an instructor" form.
-  // payoutNumberEncrypted holds an AES-256-GCM ciphertext, never the raw
-  // number. payoutNumberLast4 is safe to display in the UI as confirmation
-  // (e.g. "Mobile wallet ending in 1234") without decrypting anything.
-  payoutMethod          PayoutMethod?
-  payoutNumberEncrypted String?
-  payoutNumberLast4     String?
-
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   sessions    Session[]
@@ -83,6 +70,15 @@ model User {
 
   // Courses this user has saved to buy later
   savedCourses SavedCourse[]
+
+  // Comments this user has posted (on videos or courses)
+  comments Comment[]
+
+  // Likes this user has given to comments
+  commentLikes CommentLike[]
+
+  // Likes this user has given to individual videos
+  videoLikes VideoLike[]
 
   @@unique([email])
   @@map("user")
@@ -161,17 +157,19 @@ model Course {
   trailerDuration  Int?
 
   chapters Chapter[]
+
+  // Course-wide comments (shown on the marketplace page, not tied to one video)
+  comments Comment[]
 }
 
 model Enrollment {
-  id            String           @id @default(uuid())
-  userId        String
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId      String
-  course        Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  status        EnrollmentStatus @default(PENDING)
-  paymobOrderId String?          @unique
-  createdAt     DateTime         @default(now())
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status    EnrollmentStatus @default(PENDING)
+  createdAt DateTime         @default(now())
 
   @@unique([userId, courseId])
   @@map("enrollment")
@@ -189,6 +187,12 @@ model Video {
   courseId     String
   course       Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
   createdAt    DateTime    @default(now())
+
+  // Comments posted on this specific video (shown on the study page)
+  comments Comment[]
+
+  // Likes this video has received
+  likes VideoLike[]
 
   @@map("video")
 }
@@ -255,4 +259,53 @@ model SavedCourse {
 
   @@unique([userId, courseId])
   @@map("saved_course")
+}
+
+// A comment posted either on a specific video (study page) or on a course
+// as a whole (marketplace page). Exactly one of videoId / courseId is set —
+// Prisma has no built-in "exactly one of these" constraint, so this is
+// enforced in the server actions that create a Comment, not the database.
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId   String?
+  video     Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  courseId  String?
+  course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  likes CommentLike[]
+
+  @@index([videoId])
+  @@index([courseId])
+  @@map("comment")
+}
+
+// A user liking a comment
+model CommentLike {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId])
+  @@map("comment_like")
+}
+
+// A user liking an individual video (separate from liking the course overall)
+model VideoLike {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, videoId])
+  @@map("video_like")
 }

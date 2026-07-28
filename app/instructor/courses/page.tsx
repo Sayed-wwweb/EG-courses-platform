@@ -1,21 +1,16 @@
 import { buttonVariants } from "@/components/ui/button";
-import { CirclePlusIcon, BookOpen, PencilIcon, Clock, DollarSign, GraduationCap } from "lucide-react";
+import { CirclePlusIcon, BookOpen, Pencil, Clock, GraduationCap, Heart } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import Image from "next/image";
 import { env } from "@/lib/env";
-
+import { formatRelativeTime } from "@/lib/format-relative-time";
+import { formatCompactNumber } from "@/lib/format-count";
 
 export default async function CoursesPage() {
   const session = await auth.api.getSession({
@@ -29,6 +24,14 @@ export default async function CoursesPage() {
   const courses = await prisma.course.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
+    include: {
+      _count: {
+        select: {
+          enrollments: { where: { status: "ACTIVE" } },
+          likes: true,
+        },
+      },
+    },
   });
 
   return (
@@ -53,26 +56,25 @@ export default async function CoursesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {courses.map((course) => (
-            <Card key={course.id} className="flex flex-col justify-between overflow-hidden p-0">
-              {/* Thumbnail */}
-              <div className="relative w-full aspect-video">
-                {course.fileKey ? (
-                  <Image
-                    src={`${env.NEXT_PUBLIC_BUNNY_CDN_URL}/${course.fileKey}`}
-                    alt={course.title}
-                    className="w-full h-full object-cover"
-                    fill
-                  />
-                ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <BookOpen className="size-10 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-
-              <CardContent className="pt-4 pb-2 space-y-2">
-                 {/* Status */}
-                <div className="flex justify-end">
+            <div
+              key={course.id}
+              className="flex h-full flex-col overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 transition-all duration-200 hover:shadow-md hover:-translate-y-0.75"
+            >
+              <Link href={`/instructor/courses/${course.id}/edit`} className="flex flex-1 flex-col">
+                {/* Thumbnail with status badge overlay */}
+                <div className="relative w-full aspect-video shrink-0 overflow-hidden bg-muted">
+                  {course.fileKey ? (
+                    <Image
+                      src={`${env.NEXT_PUBLIC_BUNNY_CDN_URL}/${course.fileKey}`}
+                      alt={course.title}
+                      className="object-cover"
+                      fill
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <BookOpen className="size-10 text-muted-foreground" />
+                    </div>
+                  )}
                   <Badge
                     variant={
                       course.status === "Published"
@@ -81,56 +83,79 @@ export default async function CoursesPage() {
                         ? "secondary"
                         : "outline"
                     }
+                    className="absolute top-2 right-2 shadow-sm"
                   >
                     {course.status}
                   </Badge>
                 </div>
-                {/* Title */}
-                <h2 className="font-semibold text-base leading-tight line-clamp-2">
-                  {course.title}
-                </h2>
 
-                {/* Small description */}
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {course.smallDescription}
-                </p>
+                <div className="flex flex-1 flex-col gap-2 px-4 pt-4">
+                  {course.university && (
+                    <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {course.university}
+                    </p>
+                  )}
 
-                {/* Meta */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none rounded-full")}>
-                    <Clock className="size-3.5" /> {course.duration}h
-                  </span>
-                  <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none rounded-full ml-auto border-green-500 text-green-500 hover:text-green-500")}>
-                    <DollarSign className="size-3.5" /> {course.price} EGP
-                  </span>
+                  <h3 className="line-clamp-2 text-base font-semibold leading-snug text-foreground">
+                    {course.title}
+                  </h3>
+
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                    {course.smallDescription}
+                  </p>
+
+                  {/* Enrolled/likes stats, same treatment as the public card */}
+                  <div className="flex items-center justify-evenly gap-6 border-t pt-3 mt-1">
+                    <span className="flex flex-col items-center">
+                      <span className="flex items-center gap-1 text-lg font-semibold text-foreground">
+                        <GraduationCap className="size-4 text-muted-foreground" />
+                        {formatCompactNumber(course._count.enrollments)}
+                      </span>
+                      <span className="text-[12px] uppercase tracking-wide text-muted-foreground">
+                        Enrolled
+                      </span>
+                    </span>
+                    <span className="flex flex-col items-center">
+                      <span className="flex items-center gap-1 text-lg font-semibold text-foreground">
+                        <Heart className="size-4 text-muted-foreground" />
+                        {formatCompactNumber(course._count.likes)}
+                      </span>
+                      <span className="text-[12px] uppercase tracking-wide text-muted-foreground">
+                        Likes
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* Price/duration + created date */}
+                  <div className="flex items-center justify-between gap-2 pt-1 pb-1">
+                    <span className="flex items-center gap-2">
+                      <span className="text-primary">
+                        <span className="font-semibold">{course.price}</span>{" "}
+                        <span className="text-xs font-normal text-muted-foreground">EGP</span>
+                      </span>
+                      <span className="text-muted-foreground/40">&bull;</span>
+                      <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="size-3.5" />
+                        {course.duration}h
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      Created {formatRelativeTime(course.createdAt)}
+                    </span>
+                  </div>
                 </div>
+              </Link>
 
-                {/* University */}
-                {course.university && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-auto rounded-full hover:text-primary w-full cursor-default")}>
-                        <GraduationCap className="size-3.5 shrink-0" />
-                        <span className="truncate">{course.university}</span>
-                      </p>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{course.university}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </CardContent>
-
-              <CardFooter className="pt-2 pb-4 px-4">
+              <div className="px-4 pb-4 pt-1">
                 <Link
                   href={`/instructor/courses/${course.id}/edit`}
-                  className={cn(buttonVariants({ variant: "default", size: "sm" }), "w-full")}
+                  className={cn(buttonVariants({ size: "default" }), "w-full gap-1")}
                 >
-                  <PencilIcon className="size-4 mr-1" />
-                  Edit Course
+                  Edit course
+                  <Pencil className="size-3.5" />
                 </Link>
-              </CardFooter>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}

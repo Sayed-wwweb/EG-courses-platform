@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { BecomeInstructorButton } from "@/components/profile/become-instructor-button";
 import { AvatarUploader } from "@/components/profile/avatar-uploader";
 import { EditableField } from "@/components/profile/editable-field";
 import { ProfileStats } from "@/components/profile/profile-stats";
@@ -42,12 +41,21 @@ const user = await prisma.user.findUnique({
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
+          slug: true,
           title: true,
           smallDescription: true,
           duration: true,
+          createdAt: true,
           price: true,
           status: true,
+          university: true,
           fileKey: true,
+          _count: {
+            select: {
+              enrollments: { where: { status: "ACTIVE" } },
+              likes: true,
+            },
+          },
         },
       },
       _count: {
@@ -62,6 +70,12 @@ const user = await prisma.user.findUnique({
   if (!user) {
     redirect("/login");
   }
+
+  const coursesWithCounts = user.courses.map((course) => ({
+    ...course,
+    enrolledCount: course._count.enrollments,
+    likeCount: course._count.likes,
+  }));
 
   return (
     <div className="mx-auto max-w-3xl pb-16">
@@ -132,9 +146,9 @@ const user = await prisma.user.findUnique({
           />
         </div>
 
-        {/* Instructor CTA */}
-        <div className="mt-6 rounded-xl border bg-card p-5">
-          {user.role === "INSTRUCTOR" ? (
+        {/* Instructor shortcut — only shown to actual instructors */}
+        {user.role === "INSTRUCTOR" && (
+          <div className="mt-6 rounded-xl border bg-card p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium">You&apos;re an instructor</p>
@@ -146,18 +160,8 @@ const user = await prisma.user.findUnique({
                 <Link href="/instructor">Go to instructor page</Link>
               </Button>
             </div>
-          ) : (
-            <div className="flex items-center justify-between gap-4 md:flex-row flex-col">
-              <div>
-                <p className="font-medium md:w-full">Become an instructor</p>
-                <p className="text-sm text-muted-foreground">
-                  Create and sell your own courses on the platform.
-                </p>
-              </div>
-              <BecomeInstructorButton />
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Courses grid */}
         {user.role === "INSTRUCTOR" && (
@@ -165,7 +169,12 @@ const user = await prisma.user.findUnique({
             <h2 className="text-2xl font-bold mb-10">
               Courses
             </h2>
-            <ProfileCoursesGrid courses={user.courses} />
+            <ProfileCoursesGrid
+              courses={coursesWithCounts}
+              isOwnProfile={true}
+              creatorName={user.name}
+              creatorImage={user.image}
+            />
           </div>
         )}
       </div>

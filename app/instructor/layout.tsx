@@ -20,8 +20,9 @@ export default async function AdminPage( { children  } : { children: ReactNode})
   // Without this check, any logged-in student could open the full
   // instructor UI shell (sidebar, dashboard, course creation) even
   // though the individual server actions underneath still enforce
-  // per-course ownership.
-  if (session.user.role !== "INSTRUCTOR") {
+  // per-course ownership. Admins are also allowed in, so they can view
+  // the instructor UI from the same perspective instructors do.
+  if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
     redirect("/");
   }
   

@@ -44,7 +44,11 @@ export function LoginForm (){
         fetchOptions: {
           onSuccess: () => {
             toast.success("Verification code sent to your email!")
-            router.push(`/verify-request?email=${email}`)
+            // Kept out of the URL on purpose — an email address doesn't
+            // belong in browser history or server access logs.
+            // sessionStorage clears itself when the tab closes.
+            sessionStorage.setItem("pendingVerificationEmail", email)
+            router.push("/verify-request")
           },
           onError: () => {
             toast.error("Failed to send verification code")

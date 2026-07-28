@@ -32,9 +32,11 @@ export default function NavBar() {
     const {data: session, isPending} = authClient.useSession();
     const pathname = usePathname();
     const hideAvatar = pathname === "/profile";
-    const isInstructor = session?.user.role === "INSTRUCTOR";
+    const isInstructor = session?.user.role === "INSTRUCTOR" || session?.user.role === "ADMIN";
     // Hide the Instructor tab until the user has actually become one —
     // otherwise every visitor sees a tab that just redirects them away.
+    // Admins get the same visibility as instructors, since app/instructor/layout.tsx
+    // already lets ADMIN through at the route level.
     const visibleNavItems = navigationItems.filter(
         (item) => !item.requiresInstructor || isInstructor
     );
@@ -67,7 +69,7 @@ export default function NavBar() {
                         <ThemeToggle />
 
  {isPending ? <Skeleton className="size-9 rounded-md" /> : session && !hideAvatar ? (
-    <AvatarDropdown name={session.user.name || ""} email={session.user.email || ""} image={session.user.image || ""} square />
+    <AvatarDropdown name={session.user.name || ""} email={session.user.email || ""} image={session.user.image || ""} role={session.user.role ?? undefined} square />
 ): !session && !isPending ? (
     <>
         <Link href={"/login"} className={buttonVariants({variant: "secondary"})}>
@@ -91,6 +93,7 @@ export default function NavBar() {
             name={session.user.name || ""}
             email={session.user.email || ""}
             image={session.user.image || ""}
+            role={session.user.role ?? undefined}
             square
         />
     ) : null}
